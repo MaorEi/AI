@@ -4,7 +4,10 @@ import numpy
 
 if __name__ == '__main__':
 
-    r = 100.0
+    r = 100
+    # r = -3
+    # r = 0
+    # r = 3
     rewards = [[r, -1, 10], [-1, -1, -1], [-1, -1, -1]]
     x = [[rewards[0][0], rewards[0][1], rewards[0][2]],
          [rewards[1][0], rewards[1][1], rewards[1][2]],
@@ -28,7 +31,7 @@ if __name__ == '__main__':
                down: [(down_mask, 0.8), (left_mask, 0.1), (right_mask, 0.1)],
                right: [(right_mask, 0.8), (up_mask, 0.1), (down_mask, 0.1)],
                left: [(left_mask, 0.8), (up_mask, 0.1), (down_mask, 0.1)],
-               stay: [(stay_mask, 1.0)]}
+               stay: [(stay_mask, 0)]}
     state_actions = [[action_options, action_options, [stay]],
                      [action_options, action_options, action_options],
                      [action_options, action_options, action_options]]
@@ -57,15 +60,20 @@ if __name__ == '__main__':
         return result
 
 
-    def euclideanDistance(u, u_tag):
-        return numpy.sqrt(numpy.sum(numpy.power(numpy.subtract(u_tag, u), 2)))
+    def manhattanDistance(u, u_tag):
+        return numpy.sum(numpy.abs(numpy.subtract(u_tag, u)))
+
 
     distance = 100
     iter_num = 1
-    while distance > 20:
+    r_max = numpy.max(rewards)
+    c = 0.1
+    eps = c * r_max
+    # while iter_num < 3:
+    while distance > eps*(1-g)/g:
 
-        print(f"iteration number {iter_num}:")
-        iter_num += 1
+        print(f"Iteration number {iter_num}:")
+        policies = []
         for i in range(3):
             for j in range(3):
                 current_state = (i, j)
@@ -102,10 +110,13 @@ if __name__ == '__main__':
                 y[i][j] = reward + g * max_utility
                 max_action = actions_curr[util_vals.index(max_utility)]
                 print(
-                    f"U\'(({i},{j})) = R(({i},{j})) + gamma*max({next_utilities_tag_str}) = {reward} + {g}*max({next_utilities_calc_str}) = {y[i][j]}")
+                    f"U\'(({i},{j})) = R(({i},{j})) + \u03B3*max({next_utilities_tag_str}) = {reward} + {g}*max({next_utilities_calc_str}) = {y[i][j]}")
                 print(f"Policy for {current_state} is {max_action}")
+                policies.append((current_state, max_action))
         # print(x)
         # print(y)
-        distance = euclideanDistance(x, y)
-        print(distance)
+        distance = manhattanDistance(x, y)
+        print(f"The difference between iteration {iter_num} to it's previous: {distance}")
+        print(f'Policy for iteration {iter_num}: {policies}')
+        iter_num += 1
         x = copy.deepcopy(y)
